@@ -1,0 +1,73 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String      @id @default(uuid())
+  name         String
+  email        String      @unique
+  role         Role        @default(CITIZEN)
+  impactPoints Int         @default(0)
+  issues       Issue[]     @relation("ReportedBy")
+  pledges      Pledge[]
+  volunteers   Volunteer[]
+  createdAt    DateTime    @default(now())
+}
+
+model Issue {
+  id             String      @id @default(uuid())
+  title          String
+  description    String
+  category       String
+  latitude       Float
+  longitude      Float
+  address        String
+  imageUrlBefore String
+  imageUrlAfter  String?
+  status         Status      @default(OPEN)
+  targetAmount   Float       @default(0)
+  raisedAmount   Float       @default(0)
+  reporterId     String
+  reporter       User        @relation("ReportedBy", fields: [reporterId], references: [id])
+  pledges        Pledge[]
+  volunteers     Volunteer[]
+  createdAt      DateTime    @default(now())
+}
+
+model Pledge {
+  id        String   @id @default(uuid())
+  amount    Float
+  userId    String
+  issueId   String
+  user      User     @relation(fields: [userId], references: [id])
+  issue     Issue    @relation(fields: [issueId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Volunteer {
+  id        String   @id @default(uuid())
+  skill     String
+  userId    String
+  issueId   String
+  user      User     @relation(fields: [userId], references: [id])
+  issue     Issue    @relation(fields: [issueId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  CITIZEN
+  VOLUNTEER
+  NGO_ADMIN
+}
+
+enum Status {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  VERIFIED
+}
